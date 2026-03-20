@@ -97,13 +97,27 @@ def _collect_openclaw_models(cfg):
         if m and m not in known_ids:
             extra.append({'id': m, 'label': m, 'provider': 'OpenClaw'})
             known_ids.add(m)
-    # 收集 providers 中的 model id（如 copilot-proxy、anthropic 等）
+    # 收集 providers 中的 model id（兼容旧结构：cfg.providers.*.models）
     for pname, pcfg in cfg.get('providers', {}).items():
         for mid in (pcfg.get('models') or []):
             mid_str = mid if isinstance(mid, str) else (mid.get('id') or mid.get('name') or '')
             if mid_str and mid_str not in known_ids:
                 extra.append({'id': mid_str, 'label': mid_str, 'provider': pname})
                 known_ids.add(mid_str)
+
+    # 收集新结构：cfg.models.providers.<provider>.models（你当前的 openclaw.json 用的就是这个）
+    models_cfg = cfg.get('models', {})
+    providers_cfg = models_cfg.get('providers', {}) if isinstance(models_cfg, dict) else {}
+    for pname, pcfg in providers_cfg.items():
+        if not isinstance(pcfg, dict):
+            continue
+        for mid in (pcfg.get('models') or []):
+            # 支持 string 或 {id,name,...}
+            mid_str = mid if isinstance(mid, str) else (mid.get('id') or mid.get('name') or '')
+            if mid_str and mid_str not in known_ids:
+                extra.append({'id': mid_str, 'label': (mid.get('name') if isinstance(mid, dict) else mid_str) or mid_str, 'provider': pname})
+                known_ids.add(mid_str)
+
     return KNOWN_MODELS + extra
 
 

@@ -31,9 +31,19 @@
 """
 import json, pathlib, sys, subprocess, logging, os, re
 
-_BASE = pathlib.Path(__file__).resolve().parent.parent
-TASKS_FILE = _BASE / 'data' / 'tasks_source.json'
-REFRESH_SCRIPT = _BASE / 'scripts' / 'refresh_live_data.py'
+# NOTE: 本脚本可能被 symlink 到其他 workspace 的 scripts/ 下执行。
+# 为保证与“7898 看板（edict/dashboard/server.py）”数据源一致，
+# 优先使用当前工作目录下的 edict/data/ 作为看板数据目录。
+_CWD_BASE = pathlib.Path.cwd().resolve()
+_LOCAL_EDICT = _CWD_BASE / 'edict'
+if (_LOCAL_EDICT / 'data' / 'tasks_source.json').exists() and (_LOCAL_EDICT / 'dashboard' / 'server.py').exists():
+    _BASE = _CWD_BASE
+    TASKS_FILE = _LOCAL_EDICT / 'data' / 'tasks_source.json'
+    REFRESH_SCRIPT = _LOCAL_EDICT / 'scripts' / 'refresh_live_data.py'
+else:
+    _BASE = pathlib.Path(__file__).resolve().parent.parent
+    TASKS_FILE = _BASE / 'data' / 'tasks_source.json'
+    REFRESH_SCRIPT = _BASE / 'scripts' / 'refresh_live_data.py'
 
 log = logging.getLogger('kanban')
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(name)s] %(message)s', datefmt='%H:%M:%S')
