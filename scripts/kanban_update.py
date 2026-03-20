@@ -233,7 +233,9 @@ _VALID_TRANSITIONS = {
     'Doing':     {'Review', 'Blocked', 'Cancelled'},
     'Review':    {'Done', 'Menxia', 'Doing', 'Cancelled'},  # 可打回重审/重做
     'Blocked':   {'Doing', 'Next', 'Assigned', 'Review', 'Cancelled'},  # 解除后回原位
-    'Done':      set(),       # 终态
+    # 终态默认不允许流转；但皇上可能要求“复开”以便阶段性审查/继续推进。
+    # 允许 Done → Review/Doing（仅用于人工纠偏/追加产出）。
+    'Done':      {'Review', 'Doing'},
     'Cancelled': set(),       # 终态
 }
 
